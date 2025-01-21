@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './App.css';
 import PivotGrid from './pivotGrid/PivotGrid';
 import { Item, Property } from './pivotGrid/types';
+import { buildTree } from './pivotGrid/utils';
 
 
 
@@ -36,8 +37,6 @@ function addDateProperties(items: any[]) {
 
 addDateProperties(data);
 
-
-
 function getMonthName(monthNum: string): string {
 	const index = parseInt(monthNum)
 	return [
@@ -45,8 +44,6 @@ function getMonthName(monthNum: string): string {
 	][index - 1]
 }
 const fnSort = (a: Item, b: Item) => a.value.localeCompare(b.value)
-
-
 
 const rowStruct: Property[] = [
 	{ name: "propA" },
@@ -59,26 +56,34 @@ const colStruct: Property[] = [
 	{ name: "month", sort: fnSort, render: getMonthName },
 	{ name: "day", sort: fnSort }
 ];
-const propNames = ["value", "propC"];
+const propNames = ["value"];
+
+
 
 
 function App() {
 
 	// HOOKS
-	const [rows, setRows] = useState(() => rowStruct)
-	const [cols, setCols] = useState(() => colStruct)
+	const [rows, setRows] = useState(() => buildTree(data, rowStruct))
+	const [cols, setCols] = useState(() => buildTree(data, colStruct))
 
 	// HANDLER
+	const handleCellClick = (col: Item, row: Item) => {
+		console.log('cell click', col, row)
+	}
 
 	// RENDER
 	return (
-		<PivotGrid 
-			rowStruct={rows}
-			colStruct={cols}
+		<PivotGrid
+			rowStruct={rowStruct}
+			colStruct={colStruct}
+			rowItems={rows}
+			colItems={cols}
 			propNames={propNames}
 			data={data}
-			onRowStructureChange={setRows}
-			onColStructureChange={setCols}
+			onRowItemsChange={setRows}
+			onColItemsChange={setCols}
+			onCellClick={handleCellClick}
 		/>
 	)
 }

@@ -1,55 +1,51 @@
-import { FunctionComponent, useMemo, useState } from 'react';
+import { FunctionComponent } from 'react';
 import CellCmp from './CellCmp';
 import ItemList from './ItemList';
 import { Item, Property } from './types';
-import { buildTree, findItemByPath } from './utils';
-
-
-
-const rowsItems: Item[] = buildTree(data, rowStruct);
-const colsItems: Item[] = buildTree(data, colStruct);
+import { findItemByPath } from './utils';
 
 
 
 interface Props { 
 	rowStruct: Property[]
 	colStruct: Property[]
+	rowItems: Item[]
+	colItems: Item[]
 	propNames: string[]
 	data: any[]
-	onRowStructureChange: (rows: Property[]) => void
-	onColStructureChange: (cols: Property[]) => void
+	onRowItemsChange: (rows: Item[]) => void
+	onColItemsChange: (cols: Item[]) => void
+	onCellClick?: (col: Item, row: Item) => void
 }
 
 const PivotGrid: FunctionComponent<Props> = ({
 	rowStruct,
 	colStruct,
+	rowItems,
+	colItems,
 	propNames,
 	data,
 	onRowItemsChange,
 	onColItemsChange,
+	onCellClick,
 }) => {
 
 	// HOOKS
-	const [rows, setRows] = useState(() => rowsItems)
-	const [cols, setCols] = useState(() => colsItems)
-
-	const rowsItems = useMemo(() => buildTree(data, rowStruct), [ data, rowStruct ])
-	const colsItems = useMemo(() => buildTree(data, colStruct), [ data, colStruct ])
 
 	// HANDLER
 	const handleRowsClick = (path: string) => {
 		console.log('rows', path)
-		const itemFind = findItemByPath(rows, path)
+		const itemFind = findItemByPath(rowItems, path)
 		if (!itemFind || !itemFind.children || itemFind.children?.length == 0) return
 		itemFind.collapsed = !itemFind.collapsed
-		setRows([...rows])
+		onRowItemsChange([...rowItems])
 	}
 	const handleColsClick = (path: string) => {
 		console.log('cols', path)
-		const itemFind = findItemByPath(cols, path)
+		const itemFind = findItemByPath(colItems, path)
 		if (!itemFind || !itemFind.children || itemFind.children?.length == 0) return
 		itemFind.collapsed = !itemFind.collapsed
-		setCols([...cols])
+		onColItemsChange([...colItems])
 	}
 
 	// RENDER
@@ -62,25 +58,26 @@ const PivotGrid: FunctionComponent<Props> = ({
 
 			<ItemList style={{ gridArea: "cols", position: "sticky", top: "0px", backgroundColor: "blue" }}
 				direction='row'
-				items={cols}
+				items={colItems}
 				props={colStruct}
 				onClick={handleColsClick}
 			/>
 
 			<ItemList style={{ gridArea: "rows", position: "sticky", left: "0px", backgroundColor: "blue" }}
-				items={rows}
+				items={rowItems}
 				props={rowStruct}
 				onClick={handleRowsClick}
 			/>
 
 			<div style={{ gridArea: "values", flex: 1, backgroundColor: "red", display: "flex", flexDirection: "column" }}>
 
-				{rows.map((rowItem, irow) => (
+				{rowItems.map((rowItem, irow) => (
 					<div style={{ display: "flex", flexDirection: "row", flex: 1, }} key={irow}>
 
-						{cols.map((colItem, icol) => (
+						{colItems.map((colItem, icol) => (
 							<CellCmp key={icol}
 								row={rowItem} col={colItem} propNames={propNames} data={data}
+								onClick={onCellClick}
 							/>
 						))}
 

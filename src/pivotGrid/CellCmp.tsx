@@ -22,11 +22,13 @@ const CellCmp: FunctionComponent<CellCmpProps> = ({
 	const showCol = showChild(col)
 	const showRow = showChild(row)
 
+
 	if (!showCol && !showRow) {
 		const sharedIndexes = row.indexes?.filter(idx => col.indexes?.includes(idx)) || []
-
 		return (
-			<div style={{ flex: 1, borderLeft: "1px solid black", marginLeft: "-1px", width: "100px", display: "flex" }}>
+			<div style={{ flex: 1, borderLeft: "1px solid black", marginLeft: "-1px", width: "100px", display: "flex" }}
+				onClick={() => onClick?.(col, row)}
+			>
 				{propNames.map(propName => {
 
 					const value = sharedIndexes.length == 0 ? "--" : sharedIndexes.reduce((acc, index) => acc + data[index][propName], 0)
@@ -38,6 +40,7 @@ const CellCmp: FunctionComponent<CellCmpProps> = ({
 			</div>
 		)
 	}
+
 
 	const rows = showRow ? row.children as Item[] : [row]
 	const cols = showCol ? col.children as Item[] : [col]
