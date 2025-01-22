@@ -3,7 +3,7 @@ import './App.css';
 import PivotGrid from './pivotGrid/PivotGrid';
 import { Item, Property } from './pivotGrid/types';
 import { buildTree } from './pivotGrid/utils';
-import { ScatterChart, Scatter, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
+import { ScatterChart, Scatter, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const data = [
 	{ propA: "a1", propB: "b1", propC: "c1", date: "14-08-2015", value: 5 },
@@ -65,8 +65,15 @@ function parseDateStr(dt: string) {
 	const [day, month, year] = dt.split('-').map(Number);
 	return new Date(year, month - 1, day).getTime();
 }
-
-const scatterData = data.map((d, index) => ({
+type ScatterData = {
+	x: number,
+	y: number,
+	index: number,
+	propA: string,
+	propB: string,
+	propC: string
+}
+const scatterData = data.map<ScatterData>((d, index) => ({
 	x: parseDateStr(d.date),
 	y: d.value,
 	index,
@@ -100,63 +107,52 @@ function App() {
 	const [rows, setRows] = useState(() => buildTree(data, rowStruct))
 	const [cols, setCols] = useState(() => buildTree(data, colStruct))
 	const [hilightIndexes, setHilightIndexes] = useState<number[]>([]);
-	const [selectedPoint, setSelectedPoint] = useState<string>('');
 
 	// HANDLER
 	const handleCellClick = (row: Item, col: Item) => {
 		console.log('cell click', row, col)
 	}
-	const handleCellMouseEnter = (row: Item, col: Item, indexes?:number[]) => {
+	const handleCellMouseEnter = (row?: Item, col?: Item, indexes?: number[]) => {
 		console.log('cell mouse enter', row, col)
-
+		setHilightIndexes(indexes ?? []);
 	}
 
 	// RENDER
 	return <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-		<div style={{ marginBottom: '20px' }}>
-			<select
-				value={selectedPoint}
-				onChange={(e) => setSelectedPoint(e.target.value)}
-				style={{ padding: '5px', minWidth: '200px' }}
-			>
-				<option value="">Seleziona un punto</option>
-				{scatterData.map((point, index) => (
-					<option key={index} value={`${point.x}-${point.y}`}>
-						{`${new Date(point.x).toLocaleDateString()} - ${point.propC} (${point.y})`}
-					</option>
-				))}
-			</select>
-		</div>
-		<ScatterChart width={600} height={300}>
-			<CartesianGrid />
-			<XAxis
-				dataKey="x"
-				type="number"
-				domain={['auto', 'auto']}
-				scale="time"
-				name="Date"
-				tickFormatter={formatXAxis}
-			/>
-			<YAxis dataKey="y" name="Value" />
-			<Tooltip content={<CustomTooltip />} />
-			<Scatter
-				data={scatterData}
-				fill="#8884d8"
-				shape={(props) => {
-					const isSelected = `${props.payload.x}-${props.payload.y}` === selectedPoint;
-					return (
-						<circle
-							cx={props.cx}
-							cy={props.cy}
-							r={isSelected ? 8 : 5}
-							fill={isSelected ? "#ff0000" : "#8884d8"}
-							stroke={isSelected ? "#ff0000" : "none"}
-							strokeWidth={2}
-						/>
-					);
-				}}
-			/>
-		</ScatterChart>
+		<ResponsiveContainer width="100%" height={300}>
+			<ScatterChart>
+				<CartesianGrid />
+				<XAxis
+					dataKey="x"
+					type="number"
+					domain={['auto', 'auto']}
+					scale="time"
+					name="Date"
+					tickFormatter={formatXAxis}
+				/>
+				<YAxis dataKey="y" name="Value" />
+				<Tooltip content={<CustomTooltip />} />
+				<Scatter
+					data={scatterData}
+					fill="#8884d8"
+					shape={(props: any) => {
+						const data = props.payload as ScatterData;
+						const isSelected = hilightIndexes.includes(data.index)
+						return (
+							<circle
+								cx={props.cx}
+								cy={props.cy}
+								r={isSelected ? 8 : 5}
+								fill={isSelected ? "#ff0000" : "#8884d8"}
+								stroke={isSelected ? "#ff0000" : "none"}
+								strokeWidth={2}
+							/>
+						);
+					}}
+				/>
+			</ScatterChart>
+		</ResponsiveContainer>
+
 		<div style={{ display: "flex", flex: 1, maxWidth: '100%', overflow: 'auto' }}>
 			<PivotGrid
 				style={{ flex: 1 }}

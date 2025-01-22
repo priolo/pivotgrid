@@ -62,11 +62,11 @@ const PivotGrid: FunctionComponent<Props> = ({
 	}
 	const handleRowMouseEnter = (row: Item) => {
 		setRowHilight(row)
-		onCellMouseEnter?.(row, colHilight!)
+		onCellMouseEnter?.(row, colHilight!, row.indexes)
 	}
 	const handleColMouseEnter = (col: Item) => {
 		setColHilight(col)
-		onCellMouseEnter?.(rowHilight!, col)
+		onCellMouseEnter?.(rowHilight!, col, col.indexes)
 	}
 	const handleMouseLeave = () => {
 		setColHilight(null)
