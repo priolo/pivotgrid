@@ -1,0 +1,21 @@
+.root {
+	display: grid;
+	grid-template-areas: "void cols" "rows values";
+	grid-template-columns: auto auto;
+	grid-template-rows: auto 1fr;
+	color: black;
+}
+
+.cols {
+	grid-area: cols;
+	position: sticky;
+	top: 0px;
+	background-color: blue;
+}
+
+.rows {
+	grid-area: rows;
+	position: sticky;
+	left: 0px;
+	background-color: blue;
+}

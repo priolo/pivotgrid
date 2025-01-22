@@ -1,0 +1,43 @@
+.root {
+	display: flex;
+}
+
+.root.column {
+	flex-direction: row;
+}
+
+.root.row {
+	flex-direction: column;
+}
+
+.item {
+	flex: 1;
+	min-width: 100px;
+	min-height: 24px;
+	outline: 2px solid black;
+	outline-offset: -1px;
+}
+
+.item.column {
+	padding-left: 5px;
+}
+
+.item.row {
+	text-align: center;
+}
+
+.item.m0 {
+	background-color: #afafaf;
+}
+
+.item.m1 {
+	background-color: #8f8f8f;
+}
+
+.item.hilight {
+	background-color: #e7e7e7;
+}
+
+.item.haveChild {
+	background-color: #595d8d;
+}

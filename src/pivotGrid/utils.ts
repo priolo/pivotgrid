@@ -58,23 +58,25 @@ export function buildTree(data: any[], properties: Property[], indexes?: number[
 	return Object.entries(grouped).map(([groupValue, group]) => {
 		return {
 			value: groupValue,
-			collapsed: true,
+			collapsed: currentProp.startCollapsed ?? false,
 			indexes: group.indexes,
 			children: restProps.length ? buildTree(group.items, restProps, group.indexes) : null,
 		} as Item
 	})
 }
 
-// /**
-//  * dato un array di ITEMS
-//  * mette in ordine l'albero delle properties ITEM 
-//  */
-// export function updateItems(items: Item[], count: number): void {
+/**
+ * dato un array di ITEMS
+ * mette in ordine l'albero delle properties ITEM 
+ */
+// export function updateCount(items: Item[], count: { i: number } = { i: 0 }): Item[] {
 // 	for (const item of items) {
 // 		if (!showChild(item)) {
-// 			item.count = count
+// 			item.count = count.i
+// 			count.i++
 // 			continue
 // 		}
-// 		updateItems(item.children!, count)
+// 		updateCount(item.children!, count)
 // 	}
+// 	return items
 // }

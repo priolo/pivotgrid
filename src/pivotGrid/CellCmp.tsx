@@ -1,6 +1,7 @@
 import { FunctionComponent } from 'react';
 import { Item } from './types';
 import { showChild } from './utils';
+import cls from "./CellCmp.module.css"
 
 
 
@@ -9,25 +10,41 @@ interface CellCmpProps {
 	col: Item
 	propNames: string[]
 	data: any[]
-	onClick?: (col: Item, row: Item) => void
+
+	rowHilight?: Item | null
+	colHilight?: Item | null
+	onClick?: (row: Item, col: Item) => void
+	onMouseEnter?: (row: Item, col: Item, indexes?: number[]) => void
 }
 const CellCmp: FunctionComponent<CellCmpProps> = ({
 	row,
 	col,
 	propNames,
 	data,
+
+	rowHilight,
+	colHilight,
 	onClick,
+	onMouseEnter,
 }) => {
 
 	const showCol = showChild(col)
 	const showRow = showChild(row)
 
-
+	// RENDER CELL
 	if (!showCol && !showRow) {
+
 		const sharedIndexes = row.indexes?.filter(idx => col.indexes?.includes(idx)) || []
+
+		const clsHilight = (rowHilight == row && colHilight == col)
+			? cls.hilightCell
+			: (rowHilight == row || colHilight == col) ? cls.hilight : ""
+		const clsRoot = `${cls.root} ${col.count! % 2 ? cls.m0 : cls.m1} ${clsHilight}`
+
 		return (
-			<div style={{ flex: 1, borderLeft: "1px solid black", marginLeft: "-1px", width: "100px", display: "flex" }}
-				onClick={() => onClick?.(col, row)}
+			<div className={clsRoot}
+				onClick={() => onClick?.(row, col)}
+				onMouseEnter={() => onMouseEnter?.(row, col, sharedIndexes)}
 			>
 				{propNames.map(propName => {
 
@@ -35,7 +52,7 @@ const CellCmp: FunctionComponent<CellCmpProps> = ({
 					return <div style={{ flex: 1, textAlign: "center" }} key={propName}>
 						{value}
 					</div>
-					
+
 				})}
 			</div>
 		)
@@ -54,6 +71,9 @@ const CellCmp: FunctionComponent<CellCmpProps> = ({
 					<CellCmp key={icols}
 						row={rowItem} col={colItem} propNames={propNames} data={data}
 						onClick={onClick}
+						onMouseEnter={onMouseEnter}
+						rowHilight={rowHilight}
+						colHilight={colHilight}
 					/>
 				))}
 

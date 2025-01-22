@@ -2,7 +2,7 @@ import { FunctionComponent } from "react"
 import { Item, Property } from "./types"
 import { showChild } from "./utils"
 import ItemList from "./ItemList"
-
+import cls from "./ItemCmp.module.css"
 
 
 interface ItemCmpProps {
@@ -11,19 +11,24 @@ interface ItemCmpProps {
 
 	props: Property[]
 	propsDeep?: number
+	hilight?: Item | null
 
+	count?: any
 	direction?: 'row' | 'column'
 	onClick?: (path: string) => void
-	style?: React.CSSProperties
+	onMouseEnter?: (item: Item) => void
 }
 const ItemCmp: FunctionComponent<ItemCmpProps> = ({
 	item,
 	path = item.value,
 	props,
 	propsDeep = 0,
+	hilight,
+
+	count = { i: 0 },
 	direction = "column",
 	onClick,
-	style = {},
+	onMouseEnter,
 }) => {
 
 	// HANDLER
@@ -32,28 +37,41 @@ const ItemCmp: FunctionComponent<ItemCmpProps> = ({
 	}
 
 	// RENDER
-	const invDirection = direction === "column" ? "row" : "column"
 	const prop = props[propsDeep]
 	const value = prop?.render?.(item.value) ?? item.value
+	const visibleChildren = showChild(item)
+	if (!visibleChildren) {
+		count.i++
+		item.count = count.i
+	}
+
+	const clsDirection = cls[direction]
+	const clsHaveChild = visibleChildren ? cls.haveChild : ""
+	const clsModule = item.count! % 2 ? cls.m0 : cls.m1
+	const clsHilight = hilight == item ? cls.hilight : ""
+	const clsRoot = `${cls.root} ${clsDirection}`
+	const clsItem = `${cls.item} ${clsDirection} ${clsModule} ${clsHilight} ${clsHaveChild}`
 
 	return (
-		<div style={{ display: 'flex', flexDirection: invDirection, ...style }}>
+		<div className={clsRoot}>
 
-			<div style={{ flex: 1, minWidth: "100px", minHeight: "24px", outline: "2px solid black", outlineOffset: "-1px" }}
+			<div className={clsItem}
 				onClick={handleClick}
+				onMouseEnter={() => onMouseEnter?.(item)}
 			>{value}</div>
 
-			{showChild(item) && (
-				<div /*style={{ marginLeft: 20 }}*/>
-					<ItemList
-						items={item.children as Item[]}
-						path={path}
-						props={props}
-						propsDeep={propsDeep + 1}
-						direction={direction}
-						onClick={onClick}
-					/>
-				</div>
+			{visibleChildren && (
+				<ItemList
+					items={item.children as Item[]}
+					path={path}
+					props={props}
+					propsDeep={propsDeep + 1}
+					hilight={hilight}
+					count={count}
+					direction={direction}
+					onClick={onClick}
+					onMouseEnter={onMouseEnter}
+				/>
 			)}
 		</div>
 	)

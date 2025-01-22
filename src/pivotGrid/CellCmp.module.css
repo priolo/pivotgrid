@@ -1,0 +1,25 @@
+.root {
+	display: flex;
+	border-top: 1px solid #4d4d4d;
+	margin-top: -1px;
+	min-width: 100px;
+	min-height: 24px;
+}
+
+.root.m0 {
+	background-color: #afafaf
+}
+
+.root.m1 {
+	background-color: #9b9b9b
+}
+
+.root.hilight {
+	background-color: #ddc78a
+}
+
+.root.hilightCell {
+	background-color: #e7e7e7;
+	outline: 2px solid #858585;
+	z-index: 1;
+}

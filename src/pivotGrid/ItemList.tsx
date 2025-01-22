@@ -1,6 +1,7 @@
 import { FunctionComponent, useMemo } from "react"
 import { Item, Property } from "./types"
 import ItemCmp from "./ItemCmp"
+import cls from "./ItemList.module.css"
 
 
 
@@ -10,10 +11,13 @@ interface ItemListProps {
 
 	props: Property[]
 	propsDeep?: number
+	hilight?: Item | null
 
+	count?: any
 	direction?: 'row' | 'column'
+	className?: string
 	onClick?: (path: string) => void
-	style?: React.CSSProperties
+	onMouseEnter?: (item: Item) => void
 }
 
 const ItemList: FunctionComponent<ItemListProps> = ({
@@ -22,10 +26,13 @@ const ItemList: FunctionComponent<ItemListProps> = ({
 
 	props,
 	propsDeep = 0,
+	hilight,
 
+	count = { i: 0 },
 	direction = "column",
+	className,
 	onClick,
-	style = {},
+	onMouseEnter,
 }) => {
 
 	// RENDER
@@ -33,8 +40,10 @@ const ItemList: FunctionComponent<ItemListProps> = ({
 	const prop = props[propsDeep]
 	const renderItems = useMemo(() => prop?.sort ? items.sort(prop.sort) : items, [prop?.sort, items])
 
+	const clsRoot = `${cls.root} ${cls[direction]} ${className ?? ""}`
+	
 	return (
-		<div style={{ display: 'flex', flexDirection: direction, ...style }}>
+		<div className={clsRoot}>
 			{renderItems.map(item => (
 				<ItemCmp key={calculatedPath(item)}
 					item={item}
@@ -43,8 +52,11 @@ const ItemList: FunctionComponent<ItemListProps> = ({
 					props={props}
 					propsDeep={propsDeep}
 
+					hilight={hilight}
+					count={count}
 					direction={direction}
 					onClick={onClick}
+					onMouseEnter={onMouseEnter}
 				/>
 			))}
 		</div>

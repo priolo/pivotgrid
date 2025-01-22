@@ -1,21 +1,25 @@
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useState } from 'react';
 import CellCmp from './CellCmp';
 import ItemList from './ItemList';
 import { Item, Property } from './types';
 import { findItemByPath } from './utils';
+import cls from "./PivotGrid.module.css"
 
 
 
-interface Props { 
+interface Props {
 	rowStruct: Property[]
 	colStruct: Property[]
 	rowItems: Item[]
 	colItems: Item[]
 	propNames: string[]
 	data: any[]
+
+	style?: React.CSSProperties
 	onRowItemsChange: (rows: Item[]) => void
 	onColItemsChange: (cols: Item[]) => void
 	onCellClick?: (col: Item, row: Item) => void
+	onCellMouseEnter?: (col?: Item, row?: Item, indexes?: number[]) => void
 }
 
 const PivotGrid: FunctionComponent<Props> = ({
@@ -25,59 +29,90 @@ const PivotGrid: FunctionComponent<Props> = ({
 	colItems,
 	propNames,
 	data,
+
+	style,
 	onRowItemsChange,
 	onColItemsChange,
 	onCellClick,
+	onCellMouseEnter,
+
 }) => {
 
 	// HOOKS
+	const [colHilight, setColHilight] = useState<Item | null>(null)
+	const [rowHilight, setRowHilight] = useState<Item | null>(null)
 
 	// HANDLER
 	const handleRowsClick = (path: string) => {
-		console.log('rows', path)
 		const itemFind = findItemByPath(rowItems, path)
 		if (!itemFind || !itemFind.children || itemFind.children?.length == 0) return
 		itemFind.collapsed = !itemFind.collapsed
 		onRowItemsChange([...rowItems])
 	}
 	const handleColsClick = (path: string) => {
-		console.log('cols', path)
 		const itemFind = findItemByPath(colItems, path)
 		if (!itemFind || !itemFind.children || itemFind.children?.length == 0) return
 		itemFind.collapsed = !itemFind.collapsed
 		onColItemsChange([...colItems])
 	}
+	const handleCellMouseEnter = (row: Item, col: Item, indexes?:number[]) => {
+		setRowHilight(row)
+		setColHilight(col)
+		onCellMouseEnter?.(row, col, indexes)
+	}
+	const handleRowMouseEnter = (row: Item) => {
+		setRowHilight(row)
+		onCellMouseEnter?.(row, colHilight!)
+	}
+	const handleColMouseEnter = (col: Item) => {
+		setColHilight(col)
+		onCellMouseEnter?.(rowHilight!, col)
+	}
+	const handleMouseLeave = () => {
+		setColHilight(null)
+		setRowHilight(null)
+	}
 
 	// RENDER
 	return (
-		<div style={{ display: 'grid', gridTemplateAreas: `"void cols" "rows values"` }}>
+		<div style={style}
+			className={cls.root}
+			onMouseLeave={handleMouseLeave}
+		>
 
 			<div
-				style={{ gridArea: "void", backgroundColor: "red", position: "sticky", left: "0px", top: "0px", zIndex: 10 }}
+				style={{ gridArea: "void", border: "1px solid black", backgroundColor: "#8f8f8f", position: "sticky", left: "0px", top: "0px", zIndex: 10 }}
 			/>
 
-			<ItemList style={{ gridArea: "cols", position: "sticky", top: "0px", backgroundColor: "blue" }}
+			<ItemList className={cls.cols}
 				direction='row'
 				items={colItems}
 				props={colStruct}
+				hilight={colHilight}
 				onClick={handleColsClick}
+				onMouseEnter={handleColMouseEnter}
 			/>
 
-			<ItemList style={{ gridArea: "rows", position: "sticky", left: "0px", backgroundColor: "blue" }}
+			<ItemList className={cls.rows}
 				items={rowItems}
 				props={rowStruct}
+				hilight={rowHilight}
 				onClick={handleRowsClick}
+				onMouseEnter={handleRowMouseEnter}
 			/>
 
 			<div style={{ gridArea: "values", flex: 1, backgroundColor: "red", display: "flex", flexDirection: "column" }}>
 
 				{rowItems.map((rowItem, irow) => (
-					<div style={{ display: "flex", flexDirection: "row", flex: 1, }} key={irow}>
+					<div style={{ display: "flex", flexDirection: "row" }} key={irow}>
 
 						{colItems.map((colItem, icol) => (
 							<CellCmp key={icol}
 								row={rowItem} col={colItem} propNames={propNames} data={data}
 								onClick={onCellClick}
+								onMouseEnter={handleCellMouseEnter}
+								colHilight={colHilight}
+								rowHilight={rowHilight}
 							/>
 						))}
 

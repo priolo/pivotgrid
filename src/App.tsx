@@ -3,8 +3,7 @@ import './App.css';
 import PivotGrid from './pivotGrid/PivotGrid';
 import { Item, Property } from './pivotGrid/types';
 import { buildTree } from './pivotGrid/utils';
-
-
+import { ScatterChart, Scatter, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
 const data = [
 	{ propA: "a1", propB: "b1", propC: "c1", date: "14-08-2015", value: 5 },
@@ -39,15 +38,14 @@ addDateProperties(data);
 
 function getMonthName(monthNum: string): string {
 	const index = parseInt(monthNum)
-	return [
-		"Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
-	][index - 1]
+	return ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"][index - 1]
 }
+
 const fnSort = (a: Item, b: Item) => a.value.localeCompare(b.value)
 
 const rowStruct: Property[] = [
 	{ name: "propA" },
-	{ name: "propB" },
+	{ name: "propB", startCollapsed: true },
 	{ name: "propC" }
 ];
 
@@ -61,31 +59,120 @@ const propNames = ["value"];
 
 
 
+// CHART -----
+
+function parseDateStr(dt: string) {
+	const [day, month, year] = dt.split('-').map(Number);
+	return new Date(year, month - 1, day).getTime();
+}
+
+const scatterData = data.map((d, index) => ({
+	x: parseDateStr(d.date),
+	y: d.value,
+	index,
+	propA: d.propA,
+	propB: d.propB,
+	propC: d.propC
+}));
+
+const CustomTooltip = ({ active, payload }: any) => {
+	if (active && payload && payload.length) {
+		const data = payload[0].payload;
+		return (
+			<div style={{ backgroundColor: 'white', color: "black", padding: '10px', border: '1px solid #ccc' }}>
+				<p>Date: {new Date(data.x).toLocaleDateString()}</p>
+				<p>Value: {data.y}</p>
+				<p>PropC: {data.propC}</p>
+			</div>
+		);
+	}
+	return null;
+};
+
+const formatXAxis = (tickItem: number) => {
+	const date = new Date(tickItem);
+	return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
 function App() {
 
 	// HOOKS
 	const [rows, setRows] = useState(() => buildTree(data, rowStruct))
 	const [cols, setCols] = useState(() => buildTree(data, colStruct))
+	const [hilightIndexes, setHilightIndexes] = useState<number[]>([]);
+	const [selectedPoint, setSelectedPoint] = useState<string>('');
 
 	// HANDLER
-	const handleCellClick = (col: Item, row: Item) => {
-		console.log('cell click', col, row)
+	const handleCellClick = (row: Item, col: Item) => {
+		console.log('cell click', row, col)
+	}
+	const handleCellMouseEnter = (row: Item, col: Item, indexes?:number[]) => {
+		console.log('cell mouse enter', row, col)
+
 	}
 
 	// RENDER
-	return (
-		<PivotGrid
-			rowStruct={rowStruct}
-			colStruct={colStruct}
-			rowItems={rows}
-			colItems={cols}
-			propNames={propNames}
-			data={data}
-			onRowItemsChange={setRows}
-			onColItemsChange={setCols}
-			onCellClick={handleCellClick}
-		/>
-	)
+	return <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+		<div style={{ marginBottom: '20px' }}>
+			<select
+				value={selectedPoint}
+				onChange={(e) => setSelectedPoint(e.target.value)}
+				style={{ padding: '5px', minWidth: '200px' }}
+			>
+				<option value="">Seleziona un punto</option>
+				{scatterData.map((point, index) => (
+					<option key={index} value={`${point.x}-${point.y}`}>
+						{`${new Date(point.x).toLocaleDateString()} - ${point.propC} (${point.y})`}
+					</option>
+				))}
+			</select>
+		</div>
+		<ScatterChart width={600} height={300}>
+			<CartesianGrid />
+			<XAxis
+				dataKey="x"
+				type="number"
+				domain={['auto', 'auto']}
+				scale="time"
+				name="Date"
+				tickFormatter={formatXAxis}
+			/>
+			<YAxis dataKey="y" name="Value" />
+			<Tooltip content={<CustomTooltip />} />
+			<Scatter
+				data={scatterData}
+				fill="#8884d8"
+				shape={(props) => {
+					const isSelected = `${props.payload.x}-${props.payload.y}` === selectedPoint;
+					return (
+						<circle
+							cx={props.cx}
+							cy={props.cy}
+							r={isSelected ? 8 : 5}
+							fill={isSelected ? "#ff0000" : "#8884d8"}
+							stroke={isSelected ? "#ff0000" : "none"}
+							strokeWidth={2}
+						/>
+					);
+				}}
+			/>
+		</ScatterChart>
+		<div style={{ display: "flex", flex: 1, maxWidth: '100%', overflow: 'auto' }}>
+			<PivotGrid
+				style={{ flex: 1 }}
+				rowStruct={rowStruct}
+				colStruct={colStruct}
+				rowItems={rows}
+				colItems={cols}
+				propNames={propNames}
+				data={data}
+				onRowItemsChange={setRows}
+				onColItemsChange={setCols}
+				onCellClick={handleCellClick}
+				onCellMouseEnter={handleCellMouseEnter}
+			/>
+		</div>
+	</div>
 }
 
 export default App
